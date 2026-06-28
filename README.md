@@ -140,31 +140,12 @@ and route them to a dead letter queue instead. DLQ not implemented yet but the f
 
 ---
 
-## How to Scale This
+## Scaling Notes
 
-*These are the questions I thought through while building:*
+Things I'd look at for higher load:
+- More Kafka partitions + consumer instances for volume (currently 3 partitions)
+- Read replica once DB becomes the bottleneck (getByUser and getByStatus are the hot queries)
+- Redis is already handling read load well
 
-**High notification volume (millions/day)**
-- Increase Kafka partitions (currently 3) and add more consumer instances
-- Each consumer instance handles one partition — linear horizontal scaling
-- Use consumer groups to distribute load
-
-**DB bottleneck**
-- Add read replica for SELECT queries (getByUser, getByStatus)
-- Partition the notifications table by userId or date range
-- Archive old notifications to cold storage
-
-**Redis at scale**
-- Redis already handles the read-heavy getByUser load
-- Could extend caching to notification status checks per ID
-- Use Redis Cluster for high availability
-
-**Auth at scale**
-- JWT is stateless so auth scales horizontally with no shared state
-- Add refresh tokens to avoid frequent re-logins
-- Rate-limit the login endpoint to prevent brute force
-
-**Monitoring**
-- Add Kafka consumer lag metrics — high lag = consumers falling behind
-- Alert on FAILED notification ratio going above threshold
-- Expose health endpoint for infrastructure checks
+<!-- TODO: add consumer lag monitoring alert -->
+<!-- TODO: implement refresh token — currently JWT expires and user has to re-login -->
